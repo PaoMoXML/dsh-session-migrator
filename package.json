@@ -1,0 +1,43 @@
+{
+  "name": "dsh-session-migrator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Move old sessions out of the DSH session list and restore them later: workspace/month grouped lists, Git branch and parent display, notes/todo protection, configurable archive directory, multi-select restore, and DSH archive-state preservation. | 把旧会话迁移出 DSH 会话列表并在需要时恢复：按工作区/月份分组的列表、Git 分支与父会话显示、备注/待办保护、可配置迁移目录、多选恢复、保留 DSH 归档状态。",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": { "default": "./index.js" },
+    "./client": { "default": "./client.js" },
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib",
+    "locale/*.json",
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": []
+    }
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "session",
+    "archive",
+    "migration"
+  ],
+  "license": "MIT"
+}
