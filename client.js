@@ -33,12 +33,19 @@ window.__ModuleLoader__.load({
     const en = {
       'section.title': 'Session migration',
       'page.guide': 'Move old sessions out of the DSH session list. Session files stay in a local archive and can be restored at any time.',
+      'tab.migrate': 'Sessions to migrate',
+      'tab.archive': 'Migrated sessions',
       'migrate.title': 'Migrate old sessions',
       'migrate.before': 'Move sessions older than',
       'migrate.rangeLabel': 'Time range:',
       'migrate.monthsAgo': '{count} month(s) ago',
       'migrate.allIncludingCurrent': 'All sessions (including this month)',
-      'migrate.rangeHint': '0 means no time limit, including this month; 1 means older than one month.',
+      'migrate.rangeHint': 'Default: 1 month ago. 0 means no time limit, including this month.',
+      'migrate.presets': 'Quick range:',
+      'migrate.preset1': '1 month ago',
+      'migrate.preset3': '3 months ago',
+      'migrate.preset6': '6 months ago',
+      'migrate.presetAll': 'All (incl. this month)',
       'migrate.unit': 'month(s)',
       'migrate.archiveRoot': 'Archive directory:',
       'migrate.archiveRootReset': 'Default',
@@ -50,6 +57,7 @@ window.__ModuleLoader__.load({
       'migrate.empty': 'No sessions match this age.',
       'migrate.found': 'Found {count} session(s), {size} in total.',
       'migrate.protected': '{count} carry a note or todo and are kept by default.',
+      'migrate.live': '{count} are running and cannot be migrated now.',
       'migrate.allowMarked': 'Allow selecting sessions with a note or todo',
       'migrate.selected': '{count} selected',
       'migrate.selectAll': 'Select all',
@@ -58,6 +66,7 @@ window.__ModuleLoader__.load({
       'migrate.working': 'Migrating {done}/{total}…',
       'migrate.confirm': 'Move {count} session(s) out of the DSH session list? The files stay in the archive and can be restored.',
       'migrate.done': 'Migrated {count} session(s).',
+      'migrate.related': ' Including {count} subagent(s).',
       'migrate.undo': 'Restore this batch',
       'migrate.partial': '{count} session(s) could not be migrated.',
       'archive.title': 'Migrated sessions',
@@ -74,8 +83,13 @@ window.__ModuleLoader__.load({
       'archive.normal': 'Not archived',
       'archive.movedAt': 'Migrated {date}',
       'archive.missing': 'Archive files missing',
+      'archive.live': 'Running',
+      'subagent.count': '+{count} subagent(s)',
+      'subagent.orphan': 'Orphan subagent',
+      'migrate.orphanSubagents': '{count} orphan subagent(s) from migrated parents are still here.',
       'archive.confirm': 'Restore {count} session(s) to DSH?',
       'archive.done': 'Restored {count} session(s). Archived sessions keep their archived state.',
+      'archive.related': ' Including {count} subagent(s).',
       'archive.partial': '{count} session(s) could not be restored.',
       'archive.lastBatch': 'Last migration: {count} session(s)',
       'group.count': '{count}',
@@ -103,12 +117,19 @@ window.__ModuleLoader__.load({
     const zh = {
       'section.title': '会话迁移',
       'page.guide': '把旧会话移出 DSH 会话列表。会话文件会保留在本地归档目录，可随时恢复。',
+      'tab.migrate': '待迁移会话',
+      'tab.archive': '已迁移会话',
       'migrate.title': '迁移旧会话',
       'migrate.before': '将',
       'migrate.rangeLabel': '时间范围：',
       'migrate.monthsAgo': '{count} 个月以前',
       'migrate.allIncludingCurrent': '全部会话（含本月）',
-      'migrate.rangeHint': '填 0 表示不限制时间（包含本月）；填 1 表示 1 个月以前。',
+      'migrate.rangeHint': '默认 1 个月以前；填 0 表示不限制时间（包含本月）。',
+      'migrate.presets': '快捷范围：',
+      'migrate.preset1': '1 个月以前',
+      'migrate.preset3': '3 个月以前',
+      'migrate.preset6': '6 个月以前',
+      'migrate.presetAll': '全部（含本月）',
       'migrate.unit': '个月以前',
       'migrate.archiveRoot': '迁移目录：',
       'migrate.archiveRootReset': '默认目录',
@@ -120,6 +141,7 @@ window.__ModuleLoader__.load({
       'migrate.empty': '没有符合这个时间条件的会话。',
       'migrate.found': '找到 {count} 个会话，共 {size}。',
       'migrate.protected': '其中 {count} 个带备注或待办，默认保留。',
+      'migrate.live': '其中 {count} 个正在运行，暂不可迁移。',
       'migrate.allowMarked': '允许选择带备注或待办标记的会话',
       'migrate.selected': '已选 {count} 个',
       'migrate.selectAll': '全选全部',
@@ -128,6 +150,7 @@ window.__ModuleLoader__.load({
       'migrate.working': '正在迁移 {done}/{total}…',
       'migrate.confirm': '将 {count} 个会话移出 DSH 会话列表？文件会保留在归档目录，可随时恢复。',
       'migrate.done': '已迁移 {count} 个会话。',
+      'migrate.related': '其中含 {count} 个子代理。',
       'migrate.undo': '一键恢复本次迁移',
       'migrate.partial': '{count} 个会话迁移失败。',
       'archive.title': '已迁移会话',
@@ -144,8 +167,13 @@ window.__ModuleLoader__.load({
       'archive.normal': '未归档',
       'archive.movedAt': '迁移于 {date}',
       'archive.missing': '归档文件缺失',
+      'archive.live': '运行中',
+      'subagent.count': '+{count} 个子代理',
+      'subagent.orphan': '子代理残留',
+      'migrate.orphanSubagents': '有 {count} 个已迁移父会话的子代理仍留在会话目录。',
       'archive.confirm': '恢复 {count} 个会话到 DSH？',
       'archive.done': '已恢复 {count} 个会话。原本已归档的会话仍保持归档状态。',
+      'archive.related': '其中含 {count} 个子代理。',
       'archive.partial': '{count} 个会话恢复失败。',
       'archive.lastBatch': '上次迁移：{count} 个会话',
       'group.count': '{count} 个',
@@ -260,8 +288,36 @@ window.__ModuleLoader__.load({
       return owner
     }
 
+    /** Resolve an orphan subagent's workspace from its archived parent entry. */
+    function workspaceFromArchivedParent(row, workspaces, archiveById, tr) {
+      let parentId = row.parentSessionId
+      const seen = new Set()
+      while (typeof parentId === 'string' && !seen.has(parentId)) {
+        seen.add(parentId)
+        const parent = archiveById?.get(parentId)
+        if (parent === undefined) return null
+        if (typeof parent.workspaceId === 'string' && parent.workspaceId !== '') {
+          const live = workspaces.byId?.get(parent.workspaceId)
+          if (live !== undefined) return live
+          return {
+            key: `deleted:${parent.workspaceId}`,
+            label: tr('panel.deletedWorkspaceName', {
+              title: parent.workspaceTitle ?? parent.workspacePath ?? parent.workspaceId,
+            }),
+            order: Number.MAX_SAFE_INTEGER,
+          }
+        }
+        if (typeof parent.workspacePath === 'string') {
+          const live = workspaces.byPath?.get(parent.workspacePath)
+          if (live !== undefined) return live
+        }
+        parentId = parent.parentSessionId
+      }
+      return null
+    }
+
     /** Group rows into workspace sections, each with its own month sections. */
-    function groupRowsByWorkspace(rows, workspaces, tr) {
+    function groupRowsByWorkspace(rows, workspaces, tr, archiveById) {
       const groups = new Map()
       for (const row of rows) {
         const workspace = workspaces.get(row.sessionId) ?? null
@@ -273,11 +329,14 @@ window.__ModuleLoader__.load({
           label = workspace.label
           order = workspace.order
         } else {
-          // Prefer live identity, then the recorded path; a legacy archive
-          // entry may have no workspace id but still has its cwd.
+          // Prefer live identity, then the path recorded when the entry was
+          // migrated. Never infer ownership from the session's cwd: DSH groups
+          // by workspace accounting, not by directory matching.
           const catalogued = (typeof row.workspaceId === 'string' ? workspaces.byId?.get(row.workspaceId) : undefined)
             ?? (typeof row.workspacePath === 'string' ? workspaces.byPath?.get(row.workspacePath) : undefined)
-            ?? (typeof row.cwd === 'string' ? workspaces.byPath?.get(row.cwd) : undefined)
+            ?? (row.orphanSubagent === true
+              ? workspaceFromArchivedParent(row, workspaces, archiveById, tr)
+              : null)
             ?? null
           if (catalogued !== null) {
             key = catalogued.key
@@ -288,11 +347,11 @@ window.__ModuleLoader__.load({
             label = tr('panel.deletedWorkspaceName', {
               title: row.workspaceTitle ?? row.workspacePath ?? row.workspaceId,
             })
-            order = Number.POSITIVE_INFINITY
+            order = Number.MAX_SAFE_INTEGER
           } else {
             key = '\u0000none'
             label = tr('panel.noWorkspace')
-            order = Number.POSITIVE_INFINITY
+            order = Number.MAX_SAFE_INTEGER
           }
         }
         if (!groups.has(key)) groups.set(key, { key, label, order, rows: [] })
@@ -597,6 +656,7 @@ window.__ModuleLoader__.load({
       const branchColor = row.gitBranch !== null && row.gitBranch !== undefined && row.gitBranch !== ''
         ? 'var(--dsw-alias-brand-primary)'
         : 'var(--dsw-alias-label-secondary)'
+      const subagentCount = typeof row.subagentCount === 'number' && row.subagentCount > 0 ? row.subagentCount : 0
       const metaParts = []
       if (typeof row.cwd === 'string' && row.cwd !== '') metaParts.push(row.cwd)
       metaParts.push(formatDate(row.updatedAt, tr))
@@ -632,6 +692,9 @@ window.__ModuleLoader__.load({
             style: { flex: 'none', fontSize: '10px', lineHeight: '16px', color: branchColor, whiteSpace: 'nowrap' },
             title: tr('branch.git'),
           }, branchText),
+          row.live === true ? h(Badge, { text: tr('archive.live'), tone: 'archived' }) : null,
+          row.orphanSubagent === true ? h(Badge, { text: tr('subagent.orphan'), tone: 'archived' }) : null,
+          subagentCount > 0 ? h(Badge, { text: tr('subagent.count', { count: subagentCount }), tone: 'normal' }) : null,
           archived ? h(Badge, { text: tr('archive.archived'), tone: 'archived' }) : h(Badge, { text: tr('archive.normal'), tone: 'normal' }),
           missing ? h(Badge, { text: tr('archive.missing'), tone: 'missing' }) : null),
         h('div', { style: META_STYLE, title: metaParts.join(' · ') }, metaParts.join(' · ')),
@@ -732,7 +795,7 @@ window.__ModuleLoader__.load({
         tr('workspace.count', { count: group.count }))),
       open
         ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '4px' } },
-          group.months.map((month, index) => h(MonthSection, {
+          group.months.map((month) => h(MonthSection, {
             key: month.key,
             group: month,
             tr,
@@ -741,7 +804,9 @@ window.__ModuleLoader__.load({
             onToggle,
             isSelectable,
             onToggleGroup,
-            defaultOpen: index === 0,
+            // Every month starts collapsed: opening either migration list must
+            // not immediately reveal the most recent month's sessions.
+            defaultOpen: false,
           })))
         : null)
     }
@@ -752,7 +817,8 @@ window.__ModuleLoader__.load({
       const workspaces = typeof props.useWorkspaces === 'function'
         ? props.useWorkspaces(SELECT_WORKSPACES)
         : EMPTY_WORKSPACES
-      const [months, setMonths] = useState(0)
+      const [activeTab, setActiveTab] = useState('migrate')
+      const [months, setMonths] = useState(1)
       const [scan, setScan] = useState(null)
       const [scanning, setScanning] = useState(false)
       const [scanError, setScanError] = useState(null)
@@ -876,14 +942,14 @@ window.__ModuleLoader__.load({
       }
 
       function scanSelectable(row) {
-        return !row.protected || allowMarked
+        return row.live !== true && (!row.protected || allowMarked)
       }
 
       function requestMigrate() {
         if (scanning || busy !== null) return
         const ids = [...selected].filter((id) => {
           const row = (scan?.rows ?? []).find((entry) => entry.sessionId === id)
-          return row !== undefined && (!row.protected || allowMarked)
+          return row !== undefined && row.live !== true && (!row.protected || allowMarked)
         })
         if (ids.length === 0) return
         const workspaceMeta = {}
@@ -925,6 +991,7 @@ window.__ModuleLoader__.load({
           if (current.kind === 'migrate') {
             const migrated = []
             const failed = []
+            let related = 0
             for (let offset = 0; offset < current.ids.length; offset += BATCH_SIZE) {
               const chunk = current.ids.slice(offset, offset + BATCH_SIZE)
               const result = await request(MIGRATE_ROUTE, {
@@ -937,36 +1004,41 @@ window.__ModuleLoader__.load({
               })
               migrated.push(...result.migrated)
               failed.push(...result.failed)
+              related += result.relatedMigrated ?? 0
               setProgress({ kind: 'migrate', done: Math.min(offset + chunk.length, current.ids.length), total: current.ids.length })
             }
             refreshSessionList(pluginCtx)
             await loadArchive()
             await runScan(batchMonths)
+            const suffix = related > 0 ? tr('migrate.related', { count: related }) : ''
             setNotice({
               kind: failed.length === 0 ? 'success' : 'partial',
-              text: failed.length === 0
+              text: (failed.length === 0
                 ? tr('migrate.done', { count: migrated.length })
-                : `${tr('migrate.done', { count: migrated.length })} ${tr('migrate.partial', { count: failed.length })}`,
+                : `${tr('migrate.done', { count: migrated.length })} ${tr('migrate.partial', { count: failed.length })}`) + suffix,
               detail: failureDetail(failed),
             })
           } else {
             const restored = []
             const failed = []
+            let related = 0
             for (let offset = 0; offset < current.ids.length; offset += BATCH_SIZE) {
               const chunk = current.ids.slice(offset, offset + BATCH_SIZE)
               const result = await request(RESTORE_ROUTE, { sessionIds: chunk })
               restored.push(...result.restored)
               failed.push(...result.failed)
+              related += result.relatedRestored ?? 0
               setProgress({ kind: 'restore', done: Math.min(offset + chunk.length, current.ids.length), total: current.ids.length })
             }
             refreshSessionList(pluginCtx)
             await loadArchive()
             if (scan !== null) await runScan(batchMonths)
+            const suffix = related > 0 ? tr('archive.related', { count: related }) : ''
             setNotice({
               kind: failed.length === 0 ? 'success' : 'partial',
-              text: failed.length === 0
+              text: (failed.length === 0
                 ? tr('archive.done', { count: restored.length })
-                : `${tr('archive.done', { count: restored.length })} ${tr('archive.partial', { count: failed.length })}`,
+                : `${tr('archive.done', { count: restored.length })} ${tr('archive.partial', { count: failed.length })}`) + suffix,
               detail: failureDetail(failed),
             })
           }
@@ -987,11 +1059,11 @@ window.__ModuleLoader__.load({
         }
       }
 
-      const scanWorkspaceGroups = scan === null ? [] : groupRowsByWorkspace(withBranchFallback(scan.rows, branchTable), workspaces, tr)
-      const archiveWorkspaceGroups = archive === null ? [] : groupRowsByWorkspace(withBranchFallback(archive.entries ?? [], branchTable), workspaces, tr)
       const archiveEntries = archive?.entries ?? []
-      const restorableArchiveEntries = archiveEntries.filter((entry) => entry.missing !== true)
       const archiveById = new Map(archiveEntries.map((entry) => [entry.sessionId, entry]))
+      const scanWorkspaceGroups = scan === null ? [] : groupRowsByWorkspace(withBranchFallback(scan.rows, branchTable), workspaces, tr, archiveById)
+      const archiveWorkspaceGroups = archive === null ? [] : groupRowsByWorkspace(withBranchFallback(archive.entries ?? [], branchTable), workspaces, tr, archiveById)
+      const restorableArchiveEntries = archiveEntries.filter((entry) => entry.missing !== true && entry.live !== true)
       const lastBatchIds = (archive?.lastBatch?.ids ?? []).filter((id) => {
         const entry = archiveById.get(id)
         return entry !== undefined && entry.missing !== true
@@ -1001,6 +1073,42 @@ window.__ModuleLoader__.load({
       const allArchiveSelected = restorableArchiveEntries.length > 0
         && restorableArchiveEntries.every((entry) => archiveSelected.has(entry.sessionId))
       const totalScanSize = (scan?.rows ?? []).reduce((sum, row) => sum + (row.sizeBytes || 0), 0)
+
+      const tabBar = h('div', {
+        role: 'tablist',
+        'aria-label': tr('section.title'),
+        style: {
+          display: 'flex', alignItems: 'stretch', gap: '2px',
+          borderBottom: '1px solid var(--dsw-alias-border-l1)', minWidth: 0,
+        },
+      }, [
+        { key: 'migrate', label: tr('tab.migrate'), count: scan?.rows.length ?? 0 },
+        { key: 'archive', label: tr('tab.archive'), count: archiveEntries.length },
+      ].map((tab) => {
+        const active = activeTab === tab.key
+        return h('button', {
+          key: tab.key,
+          type: 'button',
+          role: 'tab',
+          'aria-selected': active,
+          onClick: () => {
+            setActiveTab(tab.key)
+            setConfirmation(null)
+            if (tab.key === 'archive' && archive === null) void loadArchive()
+          },
+          style: {
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            height: '34px', padding: '0 12px', border: 'none', borderRadius: '6px 6px 0 0',
+            borderBottom: active ? '2px solid var(--dsw-alias-brand-primary)' : '2px solid transparent',
+            background: active ? 'var(--dsw-alias-bg-layer-2)' : 'transparent',
+            color: active ? 'var(--dsw-alias-label-primary)' : 'var(--dsw-alias-label-secondary)',
+            font: 'inherit', fontSize: '12px', lineHeight: '18px',
+            cursor: 'pointer', whiteSpace: 'nowrap',
+          },
+        }, tab.label, tab.count > 0 ? h('span', {
+          style: { fontSize: '10px', color: 'var(--dsw-alias-label-secondary)', fontWeight: 400 },
+        }, `(${tab.count})`) : null)
+      }))
 
       let scanBody = null
       if (scan !== null) {
@@ -1012,6 +1120,12 @@ window.__ModuleLoader__.load({
               h('span', null, tr('migrate.found', { count: scan.rows.length, size: formatSize(totalScanSize) })),
               scan.stats.protected > 0
                 ? h('span', { style: { color: 'var(--dsw-alias-state-warn-label)' } }, tr('migrate.protected', { count: scan.stats.protected }))
+                : null,
+              scan.stats.live > 0
+                ? h('span', { style: { color: 'var(--dsw-alias-state-warn-label)' } }, tr('migrate.live', { count: scan.stats.live }))
+                : null,
+              scan.stats.orphanSubagents > 0
+                ? h('span', { style: { color: 'var(--dsw-alias-state-warn-label)' } }, tr('migrate.orphanSubagents', { count: scan.stats.orphanSubagents }))
                 : null),
             scan.stats.protected > 0
               ? h('label', { style: { display: 'flex', alignItems: 'center', gap: '7px', fontSize: '12px', color: 'var(--dsw-alias-label-secondary)' } },
@@ -1027,7 +1141,7 @@ window.__ModuleLoader__.load({
                 tr('migrate.allowMarked'))
               : null,
             h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
-              scanWorkspaceGroups.map((group, index) => h(WorkspaceSection, {
+              scanWorkspaceGroups.map((group) => h(WorkspaceSection, {
                 key: group.key,
                 group,
                 tr,
@@ -1036,7 +1150,9 @@ window.__ModuleLoader__.load({
                 onToggle: toggleSelected,
                 isSelectable: scanSelectable,
                 onToggleGroup: toggleGroup,
-                defaultOpen: index === 0,
+                // Workspace sections also start collapsed; the user opens the
+                // workspace first, then the month they want to inspect.
+                defaultOpen: false,
               }))),
             h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' } },
               h('span', { style: { fontSize: '12px', color: 'var(--dsw-alias-label-secondary)' } }, tr('migrate.selected', { count: selectedSize })),
@@ -1091,14 +1207,14 @@ window.__ModuleLoader__.load({
               onClick: () => requestRestore([...archiveSelected], 'restore'),
             })),
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
-            archiveWorkspaceGroups.map((group, index) => h(WorkspaceSection, {
+            archiveWorkspaceGroups.map((group) => h(WorkspaceSection, {
               key: group.key,
               group,
               tr,
               mode: 'archive',
               selected: archiveSelected,
               onToggle: toggleArchiveSelected,
-              isSelectable: (row) => row.missing !== true,
+              isSelectable: (row) => row.missing !== true && row.live !== true,
               onToggleGroup: (rows) => {
                 setArchiveSelected((previous) => {
                   const next = new Set(previous)
@@ -1110,7 +1226,7 @@ window.__ModuleLoader__.load({
                   return next
                 })
               },
-              defaultOpen: index === 0,
+              defaultOpen: false,
             }))))
       }
 
@@ -1211,6 +1327,20 @@ window.__ModuleLoader__.load({
             disabled: scanning || busy !== null,
           })),
         h('div', { style: { ...GUIDE_STYLE, fontSize: '11px' } }, tr('migrate.rangeHint')),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' } },
+          h('span', { style: { fontSize: '11px', color: 'var(--dsw-alias-label-secondary)' } }, tr('migrate.presets')),
+          [1, 3, 6, 0].map((preset) => h(ActionButton, {
+            key: `preset-${preset}`,
+            label: tr(preset === 0 ? 'migrate.presetAll' : `migrate.preset${preset}`),
+            disabled: scanning || busy !== null,
+            onClick: () => {
+              setConfirmation(null)
+              setMonths(preset)
+              setScan(null)
+              setScanError(null)
+              void runScan(preset)
+            },
+          }))),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' } },
           h('span', { style: { fontSize: '12px' } }, tr('migrate.archiveRoot')),
           h('input', {
@@ -1282,11 +1412,11 @@ window.__ModuleLoader__.load({
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: '4px' } },
         h('h2', { style: { margin: 0, fontSize: '18px', lineHeight: '26px', fontWeight: 600 } }, tr('section.title')),
         h('p', { style: { ...GUIDE_STYLE, fontSize: '12px' } }, tr('page.guide'))),
+      tabBar,
       confirmationBar,
       busyBar,
       noticeBar,
-      scanCard,
-      archiveCard)
+      activeTab === 'migrate' ? scanCard : archiveCard)
     }
 
     // Settings nav icon: an archive box with a left-pointing return arrow.
