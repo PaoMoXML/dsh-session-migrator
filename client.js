@@ -79,6 +79,10 @@ window.__ModuleLoader__.load({
       'archive.selectAll': 'Select all',
       'archive.working': 'Restoring {done}/{total}…',
       'archive.total': '{count} session(s), {archived} archived',
+      'archive.searchPlaceholder': 'Search migrated sessions by title, path, workspace, note or session id',
+      'archive.searchClear': 'Clear',
+      'archive.searchResult': '{count} of {total} session(s)',
+      'archive.searchEmpty': 'No migrated session matches this search.',
       'archive.archived': 'Archived',
       'archive.normal': 'Not archived',
       'archive.movedAt': 'Migrated {date}',
@@ -163,6 +167,10 @@ window.__ModuleLoader__.load({
       'archive.selectAll': '全选全部',
       'archive.working': '正在恢复 {done}/{total}…',
       'archive.total': '共 {count} 个会话，其中 {archived} 个已归档',
+      'archive.searchPlaceholder': '搜索已迁移会话：标题、路径、工作区、备注或会话 ID',
+      'archive.searchClear': '清除',
+      'archive.searchResult': '找到 {count} / {total} 个会话',
+      'archive.searchEmpty': '没有匹配的已迁移会话。',
       'archive.archived': '已归档',
       'archive.normal': '未归档',
       'archive.movedAt': '迁移于 {date}',
@@ -407,6 +415,24 @@ window.__ModuleLoader__.load({
       }
       return `${value >= 10 || index === 0 ? Math.round(value) : value.toFixed(1)} ${units[index]}`
     }
+    /** Whether one archived session matches a case-insensitive search query. */
+    function archiveEntryMatches(entry, query) {
+      const needle = typeof query === 'string' ? query.trim().toLowerCase() : ''
+      if (needle === '') return true
+      const fields = [
+        entry?.title,
+        entry?.cwd,
+        entry?.workspaceTitle,
+        entry?.workspacePath,
+        entry?.mark?.text,
+        entry?.sessionId,
+        entry?.parentSessionId,
+        entry?.gitBranch,
+        entry?.gitHead,
+      ]
+      return fields.some((value) => typeof value === 'string' && value.toLowerCase().includes(needle))
+    }
+
     function groupRows(rows) {
       const map = new Map()
       for (const row of rows) {
@@ -828,6 +854,7 @@ window.__ModuleLoader__.load({
       const [archiveLoading, setArchiveLoading] = useState(true)
       const [archiveError, setArchiveError] = useState(null)
       const [archiveRoot, setArchiveRoot] = useState('')
+      const [archiveQuery, setArchiveQuery] = useState('')
       const [archiveSelected, setArchiveSelected] = useState(() => new Set())
       const [branchTable, setBranchTable] = useState({})
       const [busy, setBusy] = useState(null)
@@ -1061,8 +1088,13 @@ window.__ModuleLoader__.load({
 
       const archiveEntries = archive?.entries ?? []
       const archiveById = new Map(archiveEntries.map((entry) => [entry.sessionId, entry]))
+      const archiveQueryText = archiveQuery.trim()
+      const searchableArchiveEntries = withBranchFallback(archiveEntries, branchTable)
+      const visibleArchiveEntries = archiveQueryText === ''
+        ? searchableArchiveEntries
+        : searchableArchiveEntries.filter((entry) => archiveEntryMatches(entry, archiveQueryText))
       const scanWorkspaceGroups = scan === null ? [] : groupRowsByWorkspace(withBranchFallback(scan.rows, branchTable), workspaces, tr, archiveById)
-      const archiveWorkspaceGroups = archive === null ? [] : groupRowsByWorkspace(withBranchFallback(archive.entries ?? [], branchTable), workspaces, tr, archiveById)
+      const archiveWorkspaceGroups = archive === null ? [] : groupRowsByWorkspace(visibleArchiveEntries, workspaces, tr, archiveById)
       const restorableArchiveEntries = archiveEntries.filter((entry) => entry.missing !== true && entry.live !== true)
       const lastBatchIds = (archive?.lastBatch?.ids ?? []).filter((id) => {
         const entry = archiveById.get(id)
@@ -1179,6 +1211,12 @@ window.__ModuleLoader__.load({
               count: archiveEntries.length,
               archived: archiveEntries.filter((entry) => entry.archived).length,
             })),
+            archiveQueryText !== ''
+              ? h('span', { style: { color: 'var(--dsw-alias-brand-primary)' } }, tr('archive.searchResult', {
+                count: visibleArchiveEntries.length,
+                total: archiveEntries.length,
+              }))
+              : null,
             lastBatchIds.length > 0
               ? h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: '6px' } },
                 h('span', { style: { color: 'var(--dsw-alias-label-secondary)' } }, tr('archive.lastBatch', { count: lastBatchIds.length })),
@@ -1207,7 +1245,9 @@ window.__ModuleLoader__.load({
               onClick: () => requestRestore([...archiveSelected], 'restore'),
             })),
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
-            archiveWorkspaceGroups.map((group) => h(WorkspaceSection, {
+            archiveQueryText !== '' && visibleArchiveEntries.length === 0
+              ? h('div', { style: { ...GUIDE_STYLE, padding: '4px 0' } }, tr('archive.searchEmpty'))
+              : archiveWorkspaceGroups.map((group) => h(WorkspaceSection, {
               key: group.key,
               group,
               tr,
@@ -1389,6 +1429,28 @@ window.__ModuleLoader__.load({
               disabled: restorableArchiveEntries.length === 0 || busy !== null,
               onClick: () => requestRestore(restorableArchiveEntries.map((entry) => entry.sessionId), 'restoreAll'),
             }))),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' } },
+          h('input', {
+            type: 'search',
+            value: archiveQuery,
+            placeholder: tr('archive.searchPlaceholder'),
+            onChange: (event) => setArchiveQuery(event.target.value),
+            disabled: archive === null || archiveEntries.length === 0 || archiveLoading,
+            autoComplete: 'off',
+            spellCheck: false,
+            style: {
+              flex: '1 1 320px', minWidth: '220px', height: '30px', padding: '0 10px',
+              boxSizing: 'border-box', borderRadius: '6px',
+              border: '1px solid var(--dsw-alias-border-l1)',
+              background: 'var(--dsw-alias-bg-base)',
+              color: 'var(--dsw-alias-label-primary)',
+              font: 'inherit', fontSize: '12px',
+            },
+            'aria-label': tr('archive.searchPlaceholder'),
+          }),
+          archiveQueryText !== ''
+            ? h(ActionButton, { label: tr('archive.searchClear'), onClick: () => setArchiveQuery('') })
+            : null),
         archiveError !== null
           ? h('div', { style: { color: 'var(--dsw-alias-state-error-primary)', fontSize: '12px' } },
             tr('common.error', { message: archiveError }),
@@ -1503,7 +1565,7 @@ window.__ModuleLoader__.load({
       }, MigratorIcon))
     }
 
-    module.exports = { name: PACKAGE_NAME, inject, apply }
+    module.exports = { name: PACKAGE_NAME, inject, apply, __test: { archiveEntryMatches } }
     return module.exports
   },
 })

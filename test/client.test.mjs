@@ -38,6 +38,15 @@ test('client module factory loads and exports apply', async () => {
   assert.equal(typeof module.apply, 'function')
   assert.deepEqual(module.inject, ['slots'])
 
+  const matches = module.__test.archiveEntryMatches
+  assert.equal(matches({ title: 'ePoint 会话' }, 'epoint'), true)
+  assert.equal(matches({ cwd: 'E:\\EpointProject\\epoint-etrading-parent' }, 'epointproject'), true)
+  assert.equal(matches({ workspaceTitle: '总控' }, '总控'), true)
+  assert.equal(matches({ mark: { text: '待办：验收搜索' } }, '验收'), true)
+  assert.equal(matches({ sessionId: 'session-ABC' }, 'abc'), true)
+  assert.equal(matches({ title: 'ePoint' }, '不存在的词'), false)
+  assert.equal(matches({ title: 'ePoint' }, '   '), true)
+
   const registered = []
   const slots = {
     inject(key, callback) {
