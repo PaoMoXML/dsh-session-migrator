@@ -1,4 +1,4 @@
-// dsh-session-migrator — browser half.
+// dsh-session-migrator — browser half (v0.2.0).
 //
 // One settings section, Settings → 会话迁移. It talks to the Host half through
 // four loopback-only POST routes and never folds session events itself.

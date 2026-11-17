@@ -22,7 +22,8 @@
     "README.md"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=22",
+    "dsh": ">=0.2.2-0"
   },
   "dsh": {
     "bundle": { "patch": "./cordis.patch.yml" },
@@ -39,5 +40,9 @@
     "archive",
     "migration"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaoMoXML/dsh-session-migrator.git"
+  }
 }
