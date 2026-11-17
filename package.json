@@ -1,8 +1,8 @@
 {
   "name": "dsh-session-migrator",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Move old sessions out of the DSH session list and restore them later: workspace/month grouped lists, Git branch and parent display, notes/todo protection, configurable archive directory, multi-select restore, and DSH archive-state preservation. | 把旧会话迁移出 DSH 会话列表并在需要时恢复：按工作区/月份分组的列表、Git 分支与父会话显示、备注/待办保护、可配置迁移目录、多选恢复、保留 DSH 归档状态。",
+  "description": "Move old sessions or whole workspaces out of DSH and restore them with their workspace registration: workspace/month grouped lists, Git branch and parent display, notes/todo protection, whole-workspace migration, workspace recreation on restore, configurable archive directory, multi-select restore, and DSH archive-state preservation. | 把旧会话或整个工作区迁移出 DSH，并在恢复时连带重建工作区登记：按工作区/月份分组的列表、Git 分支与父会话显示、备注/待办保护、整区迁移、恢复时重建工作区、可配置迁移目录、多选恢复、保留 DSH 归档状态。",
   "type": "module",
   "main": "./index.js",
   "exports": {

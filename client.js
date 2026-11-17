@@ -20,6 +20,8 @@ window.__ModuleLoader__.load({
     const MIGRATE_ROUTE = '/session-migrator/migrate'
     const ARCHIVE_ROUTE = '/session-migrator/archive'
     const RESTORE_ROUTE = '/session-migrator/restore'
+    const WORKSPACE_MIGRATE_ROUTE = '/session-migrator/workspace-migrate'
+    const WORKSPACE_RESTORE_ROUTE = '/session-migrator/workspace-restore'
     const MARKER = 'x-dsh-session-migrator'
     const REQUEST_TIMEOUT_MS = 600_000
     /** Host accepts at most 500 ids; stay well below the limit per request. */
@@ -101,6 +103,34 @@ window.__ModuleLoader__.load({
       'panel.noWorkspace': 'No workspace',
       'panel.deletedWorkspaceName': '{title} (deleted)',
       'workspace.count': '{count} session(s)',
+      'workspace.migrateAction': 'Migrate whole workspace',
+      'workspace.panelTitle': 'Migrate whole workspaces',
+      'workspace.panelGuide': 'Pick a workspace to move all of its sessions at once, even those newer than the time range; its registration is then removed.',
+      'workspace.migrateConfirm': 'Migrate the whole workspace “{title}”? All {count} session(s), including recent ones, leave the DSH list and the workspace registration is removed. The project directory is not moved.',
+      'workspace.blockedLive': 'Has {count} running session(s)',
+      'workspace.blockedMarked': 'Has {count} session(s) with a note or todo; allow them first',
+      'workspace.blockedMissing': 'Has {count} session(s) whose files are missing',
+      'workspace.blocked': 'Workspace “{title}” was not migrated: {count} session(s) cannot move now.',
+      'workspace.membershipChanged': 'Workspace “{title}” was kept because its sessions changed during the migration.',
+      'workspace.deleteFailed': 'Workspace “{title}” was kept: its registration could not be removed.',
+      'workspace.vanished': 'Workspace “{title}” is no longer registered.',
+      'workspace.rolledBack': ' {count} moved session(s) were put back.',
+      'workspace.rollbackFailed': ' {count} session(s) could not be put back and stay in the archive.',
+      'workspace.migrateDone': 'Migrated workspace “{title}” with {count} session(s).',
+      'workspace.migratePartial': 'Workspace “{title}” was kept: {migrated} session(s) moved, {count} failed.',
+      'workspace.missingArchives': '{count} archive file(s) missing',
+      'workspace.archivedTitle': 'Migrated workspaces',
+      'workspace.archivedGuide': 'Their registrations are gone and their sessions stay in the archive. Restoring a workspace recreates the registration with its original directory and title, then puts its sessions back.',
+      'workspace.restoreAction': 'Restore workspace',
+      'workspace.restoreConfirm': 'Restore the workspace “{title}” and its {count} session(s)? The workspace registration is recreated and its sessions return to it.',
+      'workspace.restoreDone': 'Restored workspace “{title}” with {count} session(s).',
+      'workspace.restoreFailed': 'Restoring workspace “{title}” failed: {count} item(s).',
+      'workspace.restorePartial': '{count} session(s) or entry item(s) of the workspace could not be restored.',
+      'workspace.pendingCount': '{count} session(s) to restore',
+      'workspace.alreadyMigrated': '{count} already in the archive',
+      'workspace.archivedAt': 'Migrated {date}',
+      'workspace.groupArchived': 'Migrated workspace',
+      'workspace.autoRestored': ' Recreated {count} workspace(s).',
       'branch.git': 'Git branch',
       'branch.detached': 'detached',
       'branch.unknown': 'No branch record',
@@ -189,6 +219,34 @@ window.__ModuleLoader__.load({
       'panel.noWorkspace': '未分组',
       'panel.deletedWorkspaceName': '{title}（已删除）',
       'workspace.count': '{count} 个会话',
+      'workspace.migrateAction': '迁移整个工作区',
+      'workspace.panelTitle': '整区迁移工作区',
+      'workspace.panelGuide': '选一个工作区，一次迁走它的全部会话（含比时间范围更新的），随后移除该工作区登记。',
+      'workspace.migrateConfirm': '迁移整个工作区「{title}」？该工作区的 {count} 个会话（含最近会话）都会移出 DSH，工作区登记也会移除；项目目录不移动。',
+      'workspace.blockedLive': '有 {count} 个会话正在运行',
+      'workspace.blockedMarked': '有 {count} 个会话带备注或待办，需先允许',
+      'workspace.blockedMissing': '有 {count} 个会话文件缺失',
+      'workspace.blocked': '工作区「{title}」未迁移：{count} 个会话当前无法迁移。',
+      'workspace.membershipChanged': '工作区「{title}」在迁移过程中会话发生变化，登记已保留。',
+      'workspace.deleteFailed': '工作区「{title}」保留未删除：登记无法移除。',
+      'workspace.vanished': '工作区「{title}」已不在登记中。',
+      'workspace.rolledBack': ' 已放回 {count} 个已移走的会话。',
+      'workspace.rollbackFailed': ' 有 {count} 个会话无法放回，仍在归档目录。',
+      'workspace.migrateDone': '已迁移工作区「{title}」，含 {count} 个会话。',
+      'workspace.migratePartial': '工作区「{title}」保留未删除：已迁走 {migrated} 个会话，{count} 个失败。',
+      'workspace.missingArchives': '{count} 个归档文件缺失',
+      'workspace.archivedTitle': '已迁移工作区',
+      'workspace.archivedGuide': '这些工作区登记已移除，会话仍在归档目录。恢复工作区会按原目录与原标题重建登记，再把会话挂回去。',
+      'workspace.restoreAction': '恢复工作区',
+      'workspace.restoreConfirm': '恢复工作区「{title}」及其 {count} 个会话？将重建工作区登记并把会话挂回该工作区。',
+      'workspace.restoreDone': '已恢复工作区「{title}」，含 {count} 个会话。',
+      'workspace.restoreFailed': '恢复工作区「{title}」失败：{count} 个条目。',
+      'workspace.restorePartial': '该工作区有 {count} 个会话或条目恢复失败。',
+      'workspace.pendingCount': '{count} 个会话待恢复',
+      'workspace.alreadyMigrated': '{count} 个已在归档目录',
+      'workspace.archivedAt': '迁移于 {date}',
+      'workspace.groupArchived': '已迁移工作区',
+      'workspace.autoRestored': ' 并重建了 {count} 个工作区。',
       'branch.git': 'Git 分支',
       'branch.detached': '分离 HEAD',
       'branch.unknown': '未记录分支',
@@ -325,13 +383,15 @@ window.__ModuleLoader__.load({
     }
 
     /** Group rows into workspace sections, each with its own month sections. */
-    function groupRowsByWorkspace(rows, workspaces, tr, archiveById) {
+    function groupRowsByWorkspace(rows, workspaces, tr, archiveById, archivedWorkspaces) {
+      const archivedById = archivedWorkspaces ?? new Map()
       const groups = new Map()
       for (const row of rows) {
         const workspace = workspaces.get(row.sessionId) ?? null
         let key
         let label
         let order
+        let archivedWorkspace = false
         if (workspace !== null) {
           key = workspace.key
           label = workspace.label
@@ -351,18 +411,22 @@ window.__ModuleLoader__.load({
             label = catalogued.label
             order = catalogued.order
           } else if (typeof row.workspaceId === 'string' && row.workspaceId !== '') {
+            const archived = archivedById.get(row.workspaceId)
             key = `deleted:${row.workspaceId}`
-            label = tr('panel.deletedWorkspaceName', {
-              title: row.workspaceTitle ?? row.workspacePath ?? row.workspaceId,
-            })
-            order = Number.MAX_SAFE_INTEGER
+            label = archived !== undefined
+              ? archived.title
+              : tr('panel.deletedWorkspaceName', {
+                title: row.workspaceTitle ?? row.workspacePath ?? row.workspaceId,
+              })
+            order = archived !== undefined ? archived.order : Number.MAX_SAFE_INTEGER
+            archivedWorkspace = archived !== undefined
           } else {
             key = '\u0000none'
             label = tr('panel.noWorkspace')
             order = Number.MAX_SAFE_INTEGER
           }
         }
-        if (!groups.has(key)) groups.set(key, { key, label, order, rows: [] })
+        if (!groups.has(key)) groups.set(key, { key, label, order, archivedWorkspace, rows: [] })
         groups.get(key).rows.push(row)
       }
       return [...groups.values()]
@@ -789,7 +853,7 @@ window.__ModuleLoader__.load({
         : null)
     }
 
-    function WorkspaceSection({ group, tr, mode, selected, onToggle, isSelectable, onToggleGroup, defaultOpen }) {
+    function WorkspaceSection({ group, tr, mode, selected, onToggle, isSelectable, onToggleGroup, defaultOpen, action }) {
       const [open, setOpen] = useState(defaultOpen === true)
       return h('div', {
         style: {
@@ -818,7 +882,32 @@ window.__ModuleLoader__.load({
       h('span', { style: { fontSize: '12px', fontWeight: 600, color: 'var(--dsw-alias-label-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
         group.label ?? tr('panel.noWorkspace')),
       h('span', { style: { flex: 'none', fontSize: '11px', color: 'var(--dsw-alias-label-secondary)' } },
-        tr('workspace.count', { count: group.count }))),
+        tr('workspace.count', { count: group.count })),
+      group.archivedWorkspace === true
+        ? h('span', {
+          style: {
+            flex: 'none', fontSize: '10px', lineHeight: '16px', padding: '0 6px',
+            borderRadius: '999px', border: '1px solid var(--dsw-alias-state-warn-label)',
+            color: 'var(--dsw-alias-state-warn-label)', whiteSpace: 'nowrap',
+          },
+        }, tr('workspace.groupArchived'))
+        : null,
+      action !== undefined && action !== null
+        ? h('button', {
+          type: 'button',
+          'data-session-migrator': 'btn',
+          title: action.title ?? action.label,
+          disabled: action.disabled === true,
+          onClick: (event) => {
+            event.stopPropagation()
+            if (action.disabled !== true) action.onClick()
+          },
+          style: {
+            ...buttonStyle('primary', action.disabled === true),
+            height: '24px', fontSize: '11px', padding: '0 8px', marginLeft: 'auto',
+          },
+        }, action.label)
+        : null),
       open
         ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '4px' } },
           group.months.map((month) => h(MonthSection, {
@@ -834,6 +923,114 @@ window.__ModuleLoader__.load({
             // not immediately reveal the most recent month's sessions.
             defaultOpen: false,
           })))
+        : null)
+    }
+
+    function ArchivedWorkspaceRow({ entry, tr, disabled, onRestore }) {
+      const metaParts = []
+      if (typeof entry.path === 'string' && entry.path !== '') metaParts.push(entry.path)
+      metaParts.push(tr('workspace.pendingCount', { count: entry.sessionCount }))
+      if (typeof entry.missingSessions === 'number' && entry.missingSessions > 0) {
+        metaParts.push(tr('workspace.missingArchives', { count: entry.missingSessions }))
+      }
+      if (typeof entry.totalSessions === 'number' && entry.totalSessions > entry.sessionCount) {
+        metaParts.push(tr('workspace.count', { count: entry.totalSessions }))
+      }
+      metaParts.push(tr('workspace.archivedAt', { date: formatDate(entry.movedAt, tr) }))
+      return h('div', {
+        'data-session-migrator': 'row',
+        style: {
+          display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 8px',
+          border: '1px solid var(--dsw-alias-border-l1)', borderRadius: '8px',
+          opacity: disabled ? 0.6 : 1, minWidth: 0,
+        },
+      },
+      h('div', { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1px' } },
+        h('span', {
+          style: {
+            fontSize: '12px', fontWeight: 600, color: 'var(--dsw-alias-label-primary)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          },
+          title: entry.title,
+        }, entry.title),
+        h('div', { style: META_STYLE, title: metaParts.join(' · ') }, metaParts.join(' · '))),
+      h(ActionButton, {
+        label: tr('workspace.restoreAction'),
+        disabled: disabled === true,
+        onClick: onRestore,
+      }))
+    }
+
+    function WorkspaceMigratePanel({ summaries, tr, actionFor, defaultOpen }) {
+      const [open, setOpen] = useState(defaultOpen === true)
+      if (summaries.length === 0) return null
+      return h('div', {
+        style: {
+          display: 'flex', flexDirection: 'column', gap: '6px', padding: '4px 0',
+          borderTop: '1px solid var(--dsw-alias-border-l1)', minWidth: 0,
+        },
+      },
+      h('div', {
+        role: 'button',
+        tabIndex: 0,
+        'aria-expanded': open,
+        style: {
+          display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+          padding: '6px 4px', borderRadius: '6px', minWidth: 0,
+        },
+        onClick: () => setOpen((value) => !value),
+        onKeyDown: (event) => {
+          if (event.target !== event.currentTarget) return
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            setOpen((value) => !value)
+          }
+        },
+      },
+      h('span', { style: { flex: 'none', color: 'var(--dsw-alias-label-secondary)', fontSize: '11px', width: '12px' } }, open ? '▾' : '▸'),
+      h('span', { style: { fontSize: '12px', fontWeight: 600, color: 'var(--dsw-alias-label-primary)' } }, tr('workspace.panelTitle')),
+      h('span', { style: { flex: 'none', fontSize: '11px', color: 'var(--dsw-alias-label-secondary)' } },
+        tr('workspace.count', { count: summaries.length }))),
+      open
+        ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: '6px' } },
+          h('div', { style: { ...GUIDE_STYLE, fontSize: '11px' } }, tr('workspace.panelGuide')),
+          summaries.map((summary) => {
+            const action = actionFor(summary)
+            const label = summary.title ?? summary.path ?? summary.workspaceId
+            const meta = [
+              summary.path,
+              tr('workspace.count', { count: summary.total }),
+              summary.alreadyMigrated > 0
+                ? tr('workspace.alreadyMigrated', { count: summary.alreadyMigrated })
+                : null,
+            ].filter(Boolean).join(' · ')
+            return h('div', {
+              key: summary.workspaceId,
+              'data-session-migrator': 'row',
+              style: {
+                display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 8px',
+                border: '1px solid var(--dsw-alias-border-l1)', borderRadius: '8px', minWidth: 0,
+              },
+            },
+            h('div', { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1px' } },
+              h('span', {
+                style: {
+                  fontSize: '12px', fontWeight: 600, color: 'var(--dsw-alias-label-primary)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                },
+                title: label,
+              }, label),
+              h('div', { style: META_STYLE, title: meta }, meta),
+              action.disabled === true
+                ? h('div', { style: { fontSize: '11px', lineHeight: '16px', color: 'var(--dsw-alias-state-warn-label)' } }, action.title)
+                : null),
+            h(ActionButton, {
+              label: action.label,
+              title: action.title,
+              disabled: action.disabled === true,
+              onClick: action.onClick,
+            }))
+          }))
         : null)
     }
 
@@ -902,14 +1099,48 @@ window.__ModuleLoader__.load({
         setNotice({ kind: 'error', text: tr('common.error', { message: error instanceof Error ? error.message : String(error) }) })
       }
 
-      /** Readable failure details: session title first, id as a fallback. */
+      /** Readable failure details: session/workspace title first, id as a fallback. */
       function failureDetail(items) {
         const titles = new Map()
         for (const row of scan?.rows ?? []) titles.set(row.sessionId, row.title)
         for (const entry of archive?.entries ?? []) {
           if (!titles.has(entry.sessionId)) titles.set(entry.sessionId, entry.title)
         }
-        return items.map((item) => `${titles.get(item.sessionId) ?? item.sessionId}: ${item.error}`).join('\n')
+        const workspaceTitles = new Map()
+        for (const summary of scan?.workspaces ?? []) {
+          workspaceTitles.set(summary.workspaceId, summary.title ?? summary.path ?? summary.workspaceId)
+        }
+        for (const entry of archive?.workspaces ?? []) {
+          workspaceTitles.set(entry.workspaceId, entry.title ?? entry.path ?? entry.workspaceId)
+        }
+        return items.map((item) => {
+          const label = titles.get(item.sessionId)
+            ?? (typeof item.workspaceId === 'string' ? (workspaceTitles.get(item.workspaceId) ?? item.workspaceId) : undefined)
+            ?? item.sessionId
+          return `${label}: ${item.error}`
+        }).join('\n')
+      }
+
+      function requestWorkspaceMigrate(summary) {
+        if (scanning || busy !== null) return
+        setConfirmation({
+          kind: 'workspaceMigrate',
+          workspaceId: summary.workspaceId,
+          title: summary.title ?? summary.path ?? summary.workspaceId,
+          count: summary.total,
+          allowMarked,
+          archiveRoot,
+        })
+      }
+
+      function requestWorkspaceRestore(entry) {
+        if (busy !== null) return
+        setConfirmation({
+          kind: 'workspaceRestore',
+          workspaceId: entry.workspaceId,
+          title: entry.title ?? entry.path ?? entry.workspaceId,
+          count: entry.sessionCount,
+        })
       }
 
       async function runScan(nextMonths) {
@@ -972,6 +1203,22 @@ window.__ModuleLoader__.load({
         return row.live !== true && (!row.protected || allowMarked)
       }
 
+      /** The header action for one live workspace summary. */
+      function workspaceActionFor(summary) {
+        if (summary === undefined) return undefined
+        const reasons = []
+        if (summary.live > 0) reasons.push(tr('workspace.blockedLive', { count: summary.live }))
+        if (summary.missing > 0) reasons.push(tr('workspace.blockedMissing', { count: summary.missing }))
+        if (summary.marked > 0 && !allowMarked) reasons.push(tr('workspace.blockedMarked', { count: summary.marked }))
+        const disabled = scanning || busy !== null || reasons.length > 0
+        return {
+          label: tr('workspace.migrateAction'),
+          title: reasons.length > 0 ? reasons.join(' · ') : tr('workspace.migrateAction'),
+          disabled,
+          onClick: () => requestWorkspaceMigrate(summary),
+        }
+      }
+
       function requestMigrate() {
         if (scanning || busy !== null) return
         const ids = [...selected].filter((id) => {
@@ -1004,18 +1251,98 @@ window.__ModuleLoader__.load({
         if (confirmation === null) return
         const current = confirmation
         const batchMonths = current.kind === 'migrate' && typeof current.months === 'number' ? current.months : months
-        const batchAllowMarked = current.kind === 'migrate' && current.allowMarked === true
-        const batchArchiveRoot = current.kind === 'migrate' && typeof current.archiveRoot === 'string' ? current.archiveRoot : archiveRoot
+        const batchAllowMarked = (current.kind === 'migrate' || current.kind === 'workspaceMigrate') && current.allowMarked === true
+        const batchArchiveRoot = (current.kind === 'migrate' || current.kind === 'workspaceMigrate') && typeof current.archiveRoot === 'string'
+          ? current.archiveRoot
+          : archiveRoot
         const batchWorkspaceMeta = current.kind === 'migrate' && current.workspaceMeta !== null && typeof current.workspaceMeta === 'object'
           ? current.workspaceMeta
           : {}
         const batchId = `migrate-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+        const progressKind = current.kind === 'migrate' || current.kind === 'workspaceMigrate' ? 'migrate' : 'restore'
+        const totalUnits = Array.isArray(current.ids) ? current.ids.length : 1
         setConfirmation(null)
         setNotice(null)
         setBusy(current.kind)
-        setProgress({ kind: current.kind, done: 0, total: current.ids.length })
+        setProgress({ kind: progressKind, done: 0, total: totalUnits })
         try {
-          if (current.kind === 'migrate') {
+          if (current.kind === 'workspaceMigrate') {
+            const result = await request(WORKSPACE_MIGRATE_ROUTE, {
+              workspaceId: current.workspaceId,
+              allowMarked: batchAllowMarked,
+              archiveRoot: batchArchiveRoot,
+              batchId,
+            })
+            setProgress({ kind: progressKind, done: 1, total: 1 })
+            refreshSessionList(pluginCtx)
+            await loadArchive()
+            await runScan(months)
+            if (result.blocked !== null && result.blocked !== undefined) {
+              const rollbackNote = (result.rolledBack > 0 ? tr('workspace.rolledBack', { count: result.rolledBack }) : '')
+                + (result.rollbackFailed > 0 ? tr('workspace.rollbackFailed', { count: result.rollbackFailed }) : '')
+              const blockedText = result.blocked === 'workspace membership changed during migration'
+                ? tr('workspace.membershipChanged', { title: current.title })
+                : result.blocked === 'workspace registration could not be removed'
+                  ? tr('workspace.deleteFailed', { title: current.title })
+                  : result.blocked === 'workspace is no longer registered'
+                    ? tr('workspace.vanished', { title: current.title })
+                    : tr('workspace.blocked', { title: current.title, count: result.failed.length })
+              setNotice({
+                kind: 'error',
+                text: blockedText + rollbackNote,
+                detail: failureDetail(result.failed ?? []),
+              })
+            } else if (result.workspace === null || result.workspace === undefined) {
+              setNotice({
+                kind: 'partial',
+                text: tr('workspace.migratePartial', {
+                  title: current.title,
+                  migrated: result.migrated.length,
+                  count: result.failed.length,
+                }),
+                detail: failureDetail(result.failed ?? []),
+              })
+            } else {
+              const suffix = result.relatedMigrated > 0 ? tr('migrate.related', { count: result.relatedMigrated }) : ''
+              setNotice({
+                kind: 'success',
+                text: tr('workspace.migrateDone', { title: current.title, count: result.migrated.length }) + suffix,
+              })
+            }
+          } else if (current.kind === 'workspaceRestore') {
+            const result = await request(WORKSPACE_RESTORE_ROUTE, { workspaceIds: [current.workspaceId] })
+            setProgress({ kind: progressKind, done: 1, total: 1 })
+            refreshSessionList(pluginCtx)
+            await loadArchive()
+            await runScan(months)
+            const restoredWorkspace = (result.workspacesRestored ?? [])[0]
+            const failures = [...(result.workspaceFailures ?? []), ...(result.failed ?? [])]
+            if (restoredWorkspace === undefined) {
+              setNotice({
+                kind: 'error',
+                text: tr('workspace.restoreFailed', { title: current.title, count: failures.length }),
+                detail: failureDetail(failures),
+              })
+            } else if (failures.length > 0) {
+              setNotice({
+                kind: 'partial',
+                text: `${tr('workspace.restoreDone', {
+                  title: restoredWorkspace.title ?? current.title,
+                  count: restoredWorkspace.attached.length,
+                })} ${tr('workspace.restorePartial', { count: failures.length })}`,
+                detail: failureDetail(failures),
+              })
+            } else {
+              const suffix = result.relatedRestored > 0 ? tr('archive.related', { count: result.relatedRestored }) : ''
+              setNotice({
+                kind: 'success',
+                text: tr('workspace.restoreDone', {
+                  title: restoredWorkspace.title ?? current.title,
+                  count: restoredWorkspace.attached.length,
+                }) + suffix,
+              })
+            }
+          } else if (current.kind === 'migrate') {
             const migrated = []
             const failed = []
             let related = 0
@@ -1049,24 +1376,30 @@ window.__ModuleLoader__.load({
             const restored = []
             const failed = []
             let related = 0
+            let workspacesRestored = 0
+            const workspaceFailures = []
             for (let offset = 0; offset < current.ids.length; offset += BATCH_SIZE) {
               const chunk = current.ids.slice(offset, offset + BATCH_SIZE)
               const result = await request(RESTORE_ROUTE, { sessionIds: chunk })
               restored.push(...result.restored)
               failed.push(...result.failed)
               related += result.relatedRestored ?? 0
+              workspacesRestored += (result.workspacesRestored ?? []).length
+              workspaceFailures.push(...(result.workspaceFailures ?? []))
               setProgress({ kind: 'restore', done: Math.min(offset + chunk.length, current.ids.length), total: current.ids.length })
             }
             refreshSessionList(pluginCtx)
             await loadArchive()
             if (scan !== null) await runScan(batchMonths)
-            const suffix = related > 0 ? tr('archive.related', { count: related }) : ''
+            const failures = [...failed, ...workspaceFailures]
+            const suffix = (related > 0 ? tr('archive.related', { count: related }) : '')
+              + (workspacesRestored > 0 ? tr('workspace.autoRestored', { count: workspacesRestored }) : '')
             setNotice({
-              kind: failed.length === 0 ? 'success' : 'partial',
-              text: (failed.length === 0
+              kind: failures.length === 0 ? 'success' : 'partial',
+              text: (failures.length === 0
                 ? tr('archive.done', { count: restored.length })
-                : `${tr('archive.done', { count: restored.length })} ${tr('archive.partial', { count: failed.length })}`) + suffix,
-              detail: failureDetail(failed),
+                : `${tr('archive.done', { count: restored.length })} ${tr('archive.partial', { count: failures.length })}`) + suffix,
+              detail: failureDetail(failures),
             })
           }
         } catch (error) {
@@ -1088,13 +1421,21 @@ window.__ModuleLoader__.load({
 
       const archiveEntries = archive?.entries ?? []
       const archiveById = new Map(archiveEntries.map((entry) => [entry.sessionId, entry]))
+      const workspaceSummaries = new Map((scan?.workspaces ?? []).map((summary) => [summary.workspaceId, summary]))
+      const archivedWorkspaces = archive?.workspaces ?? []
+      const archivedWorkspaceById = new Map(archivedWorkspaces.map((entry) => [entry.workspaceId, entry]))
+      const workspaceMarkedCount = [...workspaceSummaries.values()]
+        .reduce((sum, summary) => sum + (summary.marked || 0), 0)
+      const showAllowMarked = (scan?.stats?.protected ?? 0) > 0 || workspaceMarkedCount > 0
+      const liveWorkspaceSummaries = [...workspaceSummaries.values()]
+        .sort((left, right) => left.order - right.order)
       const archiveQueryText = archiveQuery.trim()
       const searchableArchiveEntries = withBranchFallback(archiveEntries, branchTable)
       const visibleArchiveEntries = archiveQueryText === ''
         ? searchableArchiveEntries
         : searchableArchiveEntries.filter((entry) => archiveEntryMatches(entry, archiveQueryText))
-      const scanWorkspaceGroups = scan === null ? [] : groupRowsByWorkspace(withBranchFallback(scan.rows, branchTable), workspaces, tr, archiveById)
-      const archiveWorkspaceGroups = archive === null ? [] : groupRowsByWorkspace(visibleArchiveEntries, workspaces, tr, archiveById)
+      const scanWorkspaceGroups = scan === null ? [] : groupRowsByWorkspace(withBranchFallback(scan.rows, branchTable), workspaces, tr, archiveById, archivedWorkspaceById)
+      const archiveWorkspaceGroups = archive === null ? [] : groupRowsByWorkspace(visibleArchiveEntries, workspaces, tr, archiveById, archivedWorkspaceById)
       const restorableArchiveEntries = archiveEntries.filter((entry) => entry.missing !== true && entry.live !== true)
       const lastBatchIds = (archive?.lastBatch?.ids ?? []).filter((id) => {
         const entry = archiveById.get(id)
@@ -1159,7 +1500,7 @@ window.__ModuleLoader__.load({
               scan.stats.orphanSubagents > 0
                 ? h('span', { style: { color: 'var(--dsw-alias-state-warn-label)' } }, tr('migrate.orphanSubagents', { count: scan.stats.orphanSubagents }))
                 : null),
-            scan.stats.protected > 0
+            showAllowMarked
               ? h('label', { style: { display: 'flex', alignItems: 'center', gap: '7px', fontSize: '12px', color: 'var(--dsw-alias-label-secondary)' } },
                 h('input', {
                   'data-session-migrator': 'checkbox',
@@ -1202,7 +1543,7 @@ window.__ModuleLoader__.load({
       let archiveBody = null
       if (archiveLoading && archive === null) {
         archiveBody = h('div', { style: GUIDE_STYLE }, tr('common.loading'))
-      } else if (archive !== null && archiveEntries.length === 0) {
+      } else if (archive !== null && archiveEntries.length === 0 && archivedWorkspaces.length === 0) {
         archiveBody = h('div', { style: { ...GUIDE_STYLE, padding: '4px 0' } }, tr('archive.empty'))
       } else if (archive !== null) {
         archiveBody = h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
@@ -1244,6 +1585,26 @@ window.__ModuleLoader__.load({
               disabled: archiveSelectedCount === 0 || busy !== null,
               onClick: () => requestRestore([...archiveSelected], 'restore'),
             })),
+          archivedWorkspaces.length > 0
+            ? h('div', {
+              style: {
+                display: 'flex', flexDirection: 'column', gap: '6px', padding: '4px 0',
+                borderTop: '1px solid var(--dsw-alias-border-l1)',
+              },
+            },
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+              h('span', { style: { fontSize: '12px', fontWeight: 600, color: 'var(--dsw-alias-label-primary)' } }, tr('workspace.archivedTitle')),
+              h('span', { style: { fontSize: '11px', color: 'var(--dsw-alias-label-secondary)' } },
+                tr('workspace.count', { count: archivedWorkspaces.length }))),
+            h('div', { style: { ...GUIDE_STYLE, fontSize: '11px' } }, tr('workspace.archivedGuide')),
+            archivedWorkspaces.map((entry) => h(ArchivedWorkspaceRow, {
+              key: entry.workspaceId,
+              entry,
+              tr,
+              disabled: busy !== null,
+              onRestore: () => requestWorkspaceRestore(entry),
+            })))
+            : null,
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
             archiveQueryText !== '' && visibleArchiveEntries.length === 0
               ? h('div', { style: { ...GUIDE_STYLE, padding: '4px 0' } }, tr('archive.searchEmpty'))
@@ -1284,7 +1645,11 @@ window.__ModuleLoader__.load({
         h('span', { style: { flex: 1, minWidth: '180px', fontSize: '12px' } },
           confirmation.kind === 'migrate'
             ? tr('migrate.confirm', { count: confirmation.count })
-            : tr('archive.confirm', { count: confirmation.count })),
+            : confirmation.kind === 'workspaceMigrate'
+              ? tr('workspace.migrateConfirm', { title: confirmation.title, count: confirmation.count })
+              : confirmation.kind === 'workspaceRestore'
+                ? tr('workspace.restoreConfirm', { title: confirmation.title, count: confirmation.count })
+                : tr('archive.confirm', { count: confirmation.count })),
         h(ActionButton, { label: tr('common.cancel'), onClick: () => setConfirmation(null) }),
         h(ActionButton, { label: tr('common.confirm'), kind: 'primary', onClick: () => void executeConfirmation() }))
 
@@ -1414,7 +1779,15 @@ window.__ModuleLoader__.load({
         scanError !== null
           ? h('div', { style: { color: 'var(--dsw-alias-state-error-primary)', fontSize: '12px' } }, tr('common.error', { message: scanError }))
           : null,
-        scanBody)
+        scanBody,
+        scan !== null
+          ? h(WorkspaceMigratePanel, {
+            summaries: liveWorkspaceSummaries,
+            tr,
+            actionFor: workspaceActionFor,
+            defaultOpen: false,
+          })
+          : null)
 
       const archiveCard = h('section', { style: CARD_STYLE },
         h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' } },
@@ -1565,7 +1938,12 @@ window.__ModuleLoader__.load({
       }, MigratorIcon))
     }
 
-    module.exports = { name: PACKAGE_NAME, inject, apply, __test: { archiveEntryMatches } }
+    module.exports = {
+      name: PACKAGE_NAME,
+      inject,
+      apply,
+      __test: { archiveEntryMatches, groupRowsByWorkspace, WorkspaceMigratePanel, ArchivedWorkspaceRow },
+    }
     return module.exports
   },
 })

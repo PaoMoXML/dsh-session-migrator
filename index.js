@@ -6,13 +6,16 @@
  * half is a settings page under Settings → 会话迁移.
  *
  * Data layout, all under `$DSH_HOME/session-migrator/`:
- *   entries/<id>.json   one archive entry per migrated session
- *   archive/<id>/       the whole original session directory
- *   state.json          last migration batch
+ *   entries/<id>.json      one archive entry per migrated session
+ *   workspaces/<id>.json   one restore entry per migrated workspace
+ *   archive/<id>/          the whole original session directory
+ *   state.json             last migration batch
  *
- * The DSH workspace registry is never modified: a session that was archived
- * before migration stays archived after restore because its id remains in
- * `archivedSessionIds`.
+ * A session that was archived in DSH before migration stays archived after
+ * restore because its id remains in `archivedSessionIds`. A workspace
+ * registration is removed through `ctx.workspaceRegistry` when its whole set of
+ * sessions is migrated, and recreated from `workspaces/<id>.json` on restore;
+ * the project directory itself is never moved.
  * @module dsh-session-migrator
  */
 
@@ -54,6 +57,7 @@ export function apply(ctx) {
       mover,
       marksFile: join(home, 'session-notes', 'records.json'),
       branchesFile: join(home, 'session-branch', 'records.json'),
+      workspaceFile: join(home, 'storages', 'workspace.json'),
     })
 
     for (const route of createHandlers(serviceCtx, service)) {
