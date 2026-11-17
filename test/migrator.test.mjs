@@ -5,13 +5,13 @@
 
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdir, mkdtemp, readFile, stat, utimes, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rename, stat, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { createMigrateStore } from '../lib/store.js'
 import { createMover } from '../lib/mover.js'
 import { createSessionMigrator } from '../lib/service.js'
-import { scanOlderSessions, subtractMonths } from '../lib/scanner.js'
+import { scanOlderSessions, subtractMonths, summarizeWorkspaces } from '../lib/scanner.js'
 
 const DAY = 24 * 60 * 60 * 1000
 
@@ -333,4 +333,481 @@ test('months zero keeps a session active in the current month selectable', async
   })
   assert.equal(result.rows.length, 1)
   assert.equal(result.rows[0].sessionId, 'current')
+})
+
+/** In-memory stand-in for `ctx.workspaceRegistry` with the real mutation shape. */
+function createFakeRegistry(initial = []) {
+  const order = []
+  const records = new Map()
+  const controls = { onList: null, failDelete: null }
+  let listCount = 0
+  let sequence = 0
+
+  function makeEntity(id, record) {
+    const workspace = {
+      id,
+      path: record.path,
+      title: record.title,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+      sessionIds: record.sessionIds,
+      async setTitle(title) {
+        record.title = title
+        workspace.title = title
+      },
+      async attachSession(sessionId) {
+        if (record.sessionIds.includes(sessionId)) return
+        record.sessionIds = [sessionId, ...record.sessionIds]
+        workspace.sessionIds = record.sessionIds
+      },
+      async insertSessionBefore(sessionId, beforeSessionId) {
+        const without = record.sessionIds.filter((candidate) => candidate !== sessionId)
+        if (!without.includes(beforeSessionId)) throw new Error('anchor is not accounted')
+        const at = without.indexOf(beforeSessionId)
+        record.sessionIds = [...without.slice(0, at), sessionId, ...without.slice(at)]
+        workspace.sessionIds = record.sessionIds
+      },
+      __addMember(sessionId) {
+        if (record.sessionIds.includes(sessionId)) return
+        record.sessionIds = [sessionId, ...record.sessionIds]
+        workspace.sessionIds = record.sessionIds
+      },
+    }
+    return workspace
+  }
+
+  for (const item of initial) {
+    order.push(item.id)
+    records.set(item.id, makeEntity(item.id, {
+      path: item.path,
+      title: item.title ?? '',
+      createdAt: item.createdAt ?? new Date().toISOString(),
+      updatedAt: item.updatedAt ?? new Date().toISOString(),
+      sessionIds: [...(item.sessionIds ?? [])],
+    }))
+  }
+
+  return {
+    archivedSessionIds: [],
+    __controls: controls,
+    addMember(id, sessionId) {
+      const workspace = records.get(id)
+      if (workspace === undefined) return false
+      workspace.__addMember(sessionId)
+      return true
+    },
+    list() {
+      listCount += 1
+      if (typeof controls.onList === 'function') controls.onList(listCount)
+      return order.map((id) => records.get(id))
+    },
+    get(id) {
+      return records.get(id)
+    },
+    async delete(id) {
+      if (controls.failDelete !== null) throw controls.failDelete
+      if (!records.has(id)) return false
+      records.delete(id)
+      order.splice(order.indexOf(id), 1)
+      return true
+    },
+    async create(path) {
+      sequence += 1
+      const id = `workspace-new-${sequence}`
+      const now = new Date().toISOString()
+      const entity = makeEntity(id, {
+        path,
+        title: path.split(/[\\/]/).filter(Boolean).pop() ?? path,
+        createdAt: now,
+        updatedAt: now,
+        sessionIds: [],
+      })
+      records.set(id, entity)
+      order.unshift(id)
+      return entity
+    },
+    async resolveByPath(path) {
+      return order.map((id) => records.get(id)).find((workspace) => workspace.path === path)
+    },
+    async insertBefore(id, beforeId) {
+      const without = order.filter((candidate) => candidate !== id)
+      const at = beforeId === undefined ? without.length : without.indexOf(beforeId)
+      if (at < 0) throw new Error('anchor is not registered')
+      order.splice(0, order.length, ...without.slice(0, at), id, ...without.slice(at))
+      return [...order]
+    },
+  }
+}
+
+async function makeWorkspaceFixture(options = {}) {
+  const extraWorkspaces = options.extraWorkspaces ?? []
+  const root = await mkdtemp(join(tmpdir(), 'dsh-session-migrator-workspace-'))
+  const project = join(root, 'project')
+  await mkdir(project, { recursive: true })
+  const sessionsRoot = join(root, 'sessions')
+  const projectSessions = join(sessionsRoot, '--project--')
+  const sessionOne = join(projectSessions, 'session-one')
+  const sessionTwo = join(projectSessions, 'session-two')
+  await mkdir(sessionOne, { recursive: true })
+  await mkdir(sessionTwo, { recursive: true })
+  await writeFile(join(sessionOne, 'session.v4.jsonl.zstd'), 'one')
+  await writeFile(join(sessionTwo, 'session.v4.jsonl.zstd'), 'two')
+  const old = Date.now() - 100 * DAY
+  const snapshots = [
+    {
+      header: { version: 4, id: 'session-one', createdAt: old, cwd: project, isSeeded: false },
+      location: { kind: 'jsonl', path: join(sessionOne, 'session.v4.jsonl.zstd') },
+      sizeBytes: 3,
+    },
+    {
+      header: { version: 4, id: 'session-two', createdAt: old, cwd: project, isSeeded: false },
+      location: { kind: 'jsonl', path: join(sessionTwo, 'session.v4.jsonl.zstd') },
+      sizeBytes: 3,
+    },
+  ]
+  let sessionChild = null
+  if (options.withSubagent === true) {
+    sessionChild = join(projectSessions, 'session-child')
+    await mkdir(sessionChild, { recursive: true })
+    await writeFile(join(sessionChild, 'session.v4.jsonl.zstd'), 'child')
+    snapshots.push({
+      header: {
+        version: 4, id: 'session-child', createdAt: old, cwd: project,
+        isSeeded: false, origin: 'subagent', parentSession: 'session-one', delegationDepth: 1,
+      },
+      location: { kind: 'jsonl', path: join(sessionChild, 'session.v4.jsonl.zstd') },
+      sizeBytes: 5,
+    })
+  }
+  // The real persistence listing reflects the moved directories; stat each
+  // recorded location so a restored session reappears in `presentIds`.
+  const persistence = {
+    async list() {
+      const present = []
+      for (const snapshot of snapshots) {
+        try {
+          await stat(snapshot.location.path)
+          present.push(snapshot)
+        } catch {
+          // the directory is in the archive
+        }
+      }
+      return present
+    },
+  }
+  const memberIds = ['session-one', 'session-two']
+  if (options.subagentMember === true) memberIds.unshift('session-child')
+  const registry = createFakeRegistry([
+    { id: 'workspace-demo', title: 'Demo', path: project, sessionIds: memberIds },
+    ...extraWorkspaces,
+  ])
+  const store = createMigrateStore({ root: join(root, 'session-migrator') })
+  const mover = createMover({ store })
+  const marksFile = join(root, 'session-notes', 'records.json')
+  let workspaceFile
+  if (Array.isArray(options.storedMembers)) {
+    workspaceFile = join(root, 'storages', 'workspace.json')
+    await mkdir(dirname(workspaceFile), { recursive: true })
+    await writeFile(workspaceFile, JSON.stringify({
+      unit: { name: 'workspace', version: 2 },
+      global: { initialized: true, workspaceIds: ['workspace-demo'], archivedSessionIds: [], pinnedSessionIds: [] },
+      tables: {
+        workspaces: {
+          'workspace-demo': {
+            path: project,
+            title: 'Demo',
+            sessionIds: options.storedMembers,
+            createdAt: new Date(old).toISOString(),
+            updatedAt: new Date(old).toISOString(),
+          },
+        },
+      },
+    }), 'utf8')
+  }
+  const service = createSessionMigrator({
+    ctx: { logger: { warn: () => {} } },
+    persistence,
+    sessions: { list: () => [], get: () => undefined },
+    workspaceRegistry: registry,
+    projectionCache: {
+      cachedSnapshot: (header) => ({
+        values: { title: header.id, sessionListMetadata: { blank: false, lastPromptAt: old } },
+      }),
+    },
+    store,
+    mover,
+    marksFile,
+    workspaceFile,
+  })
+  return { root, project, sessionsRoot, sessionOne, sessionTwo, sessionChild, snapshots, store, service, registry, marksFile, workspaceFile }
+}
+
+test('whole-workspace migration moves every session and removes the registration', async () => {
+  const fixture = await makeWorkspaceFixture()
+  const scan = await fixture.service.scan(0)
+  assert.equal(scan.workspaces.length, 1)
+  assert.equal(scan.workspaces[0].workspaceId, 'workspace-demo')
+  assert.equal(scan.workspaces[0].total, 2)
+  assert.equal(scan.workspaces[0].live, 0)
+  assert.equal(scan.workspaces[0].marked, 0)
+  assert.equal(scan.workspaces[0].missing, 0)
+
+  const result = await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo' })
+  assert.equal(result.blocked, null)
+  assert.deepEqual(result.migrated.sort(), ['session-one', 'session-two'])
+  assert.equal(result.workspace.workspaceId, 'workspace-demo')
+  assert.equal(fixture.registry.list().length, 0)
+  await assert.rejects(stat(fixture.sessionOne))
+  await assert.rejects(stat(fixture.sessionTwo))
+
+  const archive = await fixture.service.archive()
+  assert.equal(archive.workspaces.length, 1)
+  assert.equal(archive.workspaces[0].sessionCount, 2)
+  assert.equal(archive.entries.length, 2)
+  assert.equal(archive.lastBatch.ids.length, 2)
+})
+
+test('restoring a workspace recreates the registration and reattaches its sessions', async () => {
+  const fixture = await makeWorkspaceFixture()
+  await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo' })
+
+  const restored = await fixture.service.restoreWorkspace({ workspaceIds: ['workspace-demo'] })
+  assert.deepEqual(restored.restored.sort(), ['session-one', 'session-two'])
+  assert.equal(restored.workspaceFailures.length, 0)
+  assert.equal(restored.workspacesRestored.length, 1)
+  assert.equal((await stat(join(fixture.sessionOne, 'session.v4.jsonl.zstd'))).isFile(), true)
+
+  const workspaces = fixture.registry.list()
+  assert.equal(workspaces.length, 1)
+  assert.equal(workspaces[0].path, fixture.project)
+  assert.equal(workspaces[0].title, 'Demo')
+  assert.deepEqual(workspaces[0].sessionIds, ['session-one', 'session-two'])
+  assert.equal((await fixture.service.archive()).workspaces.length, 0)
+})
+
+test('restoring one session of an archived workspace recreates the workspace and keeps the entry', async () => {
+  const fixture = await makeWorkspaceFixture()
+  await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo' })
+
+  const first = await fixture.service.restore({ sessionIds: ['session-one'] })
+  assert.equal(first.workspacesRestored.length, 1)
+  let archive = await fixture.service.archive()
+  assert.equal(archive.workspaces.length, 1)
+  assert.equal(archive.workspaces[0].sessionCount, 1, 'one session is still archived')
+  let workspaces = fixture.registry.list()
+  assert.equal(workspaces.length, 1)
+  assert.deepEqual(workspaces[0].sessionIds, ['session-one'])
+
+  const second = await fixture.service.restore({ sessionIds: ['session-two'] })
+  assert.equal(second.workspacesRestored.length, 1)
+  archive = await fixture.service.archive()
+  assert.equal(archive.workspaces.length, 0)
+  workspaces = fixture.registry.list()
+  assert.deepEqual(workspaces[0].sessionIds, ['session-one', 'session-two'])
+})
+
+test('whole-workspace migration is refused without moving when a session is protected', async () => {
+  const fixture = await makeWorkspaceFixture()
+  await mkdir(join(fixture.root, 'session-notes'), { recursive: true })
+  await writeFile(fixture.marksFile, JSON.stringify({
+    'session-one': { kind: 'todo', text: '保留', color: 'amber', done: false, updatedAt: 1 },
+  }))
+
+  const blocked = await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo' })
+  assert.equal(blocked.blocked !== null, true)
+  assert.equal(blocked.migrated.length, 0)
+  assert.match(blocked.failed[0].error, /protected/)
+  assert.equal(fixture.registry.list().length, 1)
+  assert.equal((await stat(join(fixture.sessionOne, 'session.v4.jsonl.zstd'))).isFile(), true)
+
+  const allowed = await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo', allowMarked: true })
+  assert.equal(allowed.blocked, null)
+  assert.deepEqual(allowed.migrated.sort(), ['session-one', 'session-two'])
+  assert.equal(fixture.registry.list().length, 0)
+})
+
+test('a workspace holding already-migrated sessions is archived without blocking on their missing files', async () => {
+  const fixture = await makeWorkspaceFixture()
+  const first = await fixture.service.migrate({ months: 1, sessionIds: ['session-one'], allowMarked: true })
+  assert.deepEqual(first.migrated, ['session-one'])
+
+  const scan = await fixture.service.scan(0)
+  assert.equal(scan.workspaces[0].total, 2)
+  assert.equal(scan.workspaces[0].alreadyMigrated, 1)
+  assert.equal(scan.workspaces[0].missing, 0)
+
+  const result = await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo' })
+  assert.equal(result.blocked, null)
+  assert.deepEqual(result.migrated, ['session-two'])
+  assert.equal(fixture.registry.list().length, 0)
+
+  const archive = await fixture.service.archive()
+  assert.equal(archive.workspaces.length, 1)
+  assert.equal(archive.workspaces[0].sessionCount, 2)
+
+  const restored = await fixture.service.restoreWorkspace({ workspaceIds: ['workspace-demo'] })
+  assert.deepEqual(restored.restored.sort(), ['session-one', 'session-two'])
+  assert.deepEqual(fixture.registry.list()[0].sessionIds, ['session-one', 'session-two'])
+})
+
+test('workspace summary counts a subagent note or todo', () => {
+  const old = Date.now() - 100 * DAY
+  const snapshots = [
+    { header: { version: 4, id: 'root', createdAt: old, cwd: 'E:\\demo', isSeeded: false }, location: { kind: 'jsonl', path: 'root.zstd' } },
+    {
+      header: {
+        version: 4, id: 'child', createdAt: old, cwd: 'E:\\demo',
+        isSeeded: false, origin: 'subagent', parentSession: 'root',
+      },
+      location: { kind: 'jsonl', path: 'child.zstd' },
+    },
+  ]
+  const summary = summarizeWorkspaces({
+    workspaces: [{ id: 'workspace-demo', title: 'Demo', path: 'E:\\demo', sessionIds: ['root'] }],
+    snapshots,
+    sessions: { list: () => [] },
+    marks: { child: { kind: 'todo', text: '子代理待办', color: 'amber', done: false, updatedAt: 1 } },
+  })
+  assert.equal(summary[0].marked, 1)
+})
+
+test('whole-workspace migration covers an attached subagent member through its parent', async () => {
+  const fixture = await makeWorkspaceFixture({ withSubagent: true, subagentMember: true })
+  const result = await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo' })
+  assert.equal(result.blocked, null)
+  assert.deepEqual(result.migrated.sort(), ['session-one', 'session-two'])
+  assert.equal(result.relatedMigrated, 1)
+  assert.equal(fixture.registry.list().length, 0)
+  await assert.rejects(stat(fixture.sessionChild))
+
+  const archive = await fixture.service.archive()
+  assert.equal(archive.workspaces.length, 1)
+  assert.equal(archive.workspaces[0].sessionCount, 3)
+
+  const restored = await fixture.service.restoreWorkspace({ workspaceIds: ['workspace-demo'] })
+  // The attached subagent is a member, so an explicit workspace restore reports
+  // it too (through the parent's cascade) and attaches it back.
+  assert.deepEqual(restored.restored.sort(), ['session-child', 'session-one', 'session-two'])
+  assert.equal(restored.workspaceFailures.length, 0)
+  assert.deepEqual(
+    [...fixture.registry.list()[0].sessionIds].sort(),
+    ['session-child', 'session-one', 'session-two'],
+  )
+})
+
+test('a failing registration delete rolls the moved sessions back', async () => {
+  const fixture = await makeWorkspaceFixture()
+  fixture.registry.__controls.failDelete = new Error('delete exploded')
+
+  const result = await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo' })
+  assert.equal(result.workspace, null)
+  assert.equal(result.blocked, 'workspace registration could not be removed')
+  assert.equal(result.rolledBack, 2)
+  assert.equal(result.rollbackFailed, 0)
+  assert.equal(fixture.registry.list().length, 1)
+  assert.equal((await fixture.service.archive()).workspaces.length, 0)
+  assert.equal((await stat(join(fixture.sessionOne, 'session.v4.jsonl.zstd'))).isFile(), true)
+  assert.equal((await stat(join(fixture.sessionTwo, 'session.v4.jsonl.zstd'))).isFile(), true)
+})
+
+test('a membership change during migration is rolled back instead of leaving a half-empty workspace', async () => {
+  const fixture = await makeWorkspaceFixture()
+  fixture.registry.__controls.onList = (count) => {
+    if (count === 4) fixture.registry.addMember('workspace-demo', 'session-late')
+  }
+
+  const result = await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo' })
+  assert.equal(result.blocked, 'workspace membership changed during migration')
+  assert.equal(result.rolledBack, 2)
+  assert.equal(result.rollbackFailed, 0)
+  assert.equal(fixture.registry.list().length, 1)
+  assert.equal((await fixture.service.archive()).workspaces.length, 0)
+  assert.equal((await stat(join(fixture.sessionOne, 'session.v4.jsonl.zstd'))).isFile(), true)
+  assert.deepEqual(
+    [...fixture.registry.list()[0].sessionIds].sort(),
+    ['session-late', 'session-one', 'session-two'],
+  )
+})
+
+test('a broken archive entry is left out of the workspace recipe', async () => {
+  const fixture = await makeWorkspaceFixture()
+  await fixture.service.migrate({ months: 1, sessionIds: ['session-one'], allowMarked: true })
+  // Simulate an externally lost archive directory without deleting anything.
+  await rename(fixture.store.archiveDir('session-one'), join(fixture.root, 'lost-session-one'))
+
+  const result = await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo' })
+  assert.equal(result.blocked, null)
+  assert.deepEqual(result.migrated, ['session-two'])
+  const archive = await fixture.service.archive()
+  assert.equal(archive.workspaces.length, 1)
+  assert.equal(archive.workspaces[0].sessionCount, 1)
+  const broken = archive.entries.find((entry) => entry.sessionId === 'session-one')
+  assert.equal(broken.missing, true)
+
+  const restored = await fixture.service.restoreWorkspace({ workspaceIds: ['workspace-demo'] })
+  assert.equal(restored.workspaceFailures.length, 0)
+  assert.equal((await fixture.service.archive()).workspaces.length, 0)
+  assert.deepEqual(fixture.registry.list()[0].sessionIds, ['session-two'])
+})
+
+test('retrying a workspace restore after the project directory returns does not report restored sessions', async () => {
+  const fixture = await makeWorkspaceFixture()
+  await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo' })
+  const movedProject = join(fixture.root, 'project-moved')
+  await rename(fixture.project, movedProject)
+
+  const first = await fixture.service.restoreWorkspace({ workspaceIds: ['workspace-demo'] })
+  assert.deepEqual(first.restored.sort(), ['session-one', 'session-two'])
+  assert.equal(first.failed.length, 0)
+  assert.equal(first.workspaceFailures.length, 1)
+  assert.match(first.workspaceFailures[0].error, /directory is missing/)
+  assert.equal((await fixture.service.archive()).workspaces.length, 1)
+
+  await rename(movedProject, fixture.project)
+  const second = await fixture.service.restoreWorkspace({ workspaceIds: ['workspace-demo'] })
+  assert.equal(second.failed.length, 0)
+  assert.equal(second.workspaceFailures.length, 0)
+  assert.equal(second.workspacesRestored.length, 1)
+  assert.equal((await fixture.service.archive()).workspaces.length, 0)
+  assert.deepEqual(
+    [...fixture.registry.list()[0].sessionIds].sort(),
+    ['session-one', 'session-two'],
+  )
+})
+
+test('the durable workspace record contributes members the registry projection filters out', async () => {
+  const fixture = await makeWorkspaceFixture({
+    storedMembers: ['session-one', 'session-two', 'session-persisted-missing'],
+  })
+  const scan = await fixture.service.scan(0)
+  assert.equal(scan.workspaces[0].total, 3)
+  assert.equal(scan.workspaces[0].missing, 1)
+  assert.equal(scan.workspaces[0].alreadyMigrated, 0)
+
+  const blocked = await fixture.service.migrateWorkspace({ workspaceId: 'workspace-demo' })
+  assert.equal(blocked.blocked, 'workspace has sessions that cannot be migrated now')
+  assert.equal(blocked.migrated.length, 0)
+  assert.equal(blocked.failed.length, 1)
+  assert.equal(blocked.failed[0].sessionId, 'session-persisted-missing')
+  assert.equal(fixture.registry.list().length, 1)
+  assert.equal((await stat(join(fixture.sessionOne, 'session.v4.jsonl.zstd'))).isFile(), true)
+})
+
+test('a workspace with no sessions can still be archived and restored', async () => {
+  const emptyPath = join(tmpdir(), `dsh-session-migrator-empty-${process.pid}`)
+  await mkdir(emptyPath, { recursive: true })
+  const fixture = await makeWorkspaceFixture({
+    extraWorkspaces: [{ id: 'workspace-empty', title: 'Empty', path: emptyPath, sessionIds: [] }],
+  })
+
+  const migrated = await fixture.service.migrateWorkspace({ workspaceId: 'workspace-empty' })
+  assert.equal(migrated.blocked, null)
+  assert.deepEqual(migrated.migrated, [])
+  assert.equal(fixture.registry.list().length, 1)
+
+  const restored = await fixture.service.restoreWorkspace({ workspaceIds: ['workspace-empty'] })
+  assert.equal(restored.workspaceFailures.length, 0)
+  assert.equal(restored.workspacesRestored.length, 1)
+  assert.equal(fixture.registry.list().length, 2)
+  assert.equal((await fixture.service.archive()).workspaces.length, 0)
 })

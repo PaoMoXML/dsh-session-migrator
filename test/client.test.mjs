@@ -24,7 +24,7 @@ test('client module factory loads and exports apply', async () => {
   const React = {
     createElement: () => ({}),
     useEffect: () => {},
-    useState: () => [null, () => {}],
+    useState: (initial) => [initial, () => {}],
   }
   const requireStub = (id) => {
     if (id === 'react') return React
@@ -46,6 +46,46 @@ test('client module factory loads and exports apply', async () => {
   assert.equal(matches({ sessionId: 'session-ABC' }, 'abc'), true)
   assert.equal(matches({ title: 'ePoint' }, '不存在的词'), false)
   assert.equal(matches({ title: 'ePoint' }, '   '), true)
+
+  const { groupRowsByWorkspace, WorkspaceMigratePanel, ArchivedWorkspaceRow } = module.__test
+  const tr = (key, vars) => (vars === undefined ? key : `${key}:${JSON.stringify(vars)}`)
+  const liveWorkspaces = new Map()
+  liveWorkspaces.byId = new Map()
+  liveWorkspaces.byPath = new Map()
+  const now = Date.now()
+  const archivedWorkspaces = new Map([[
+    'ws-old',
+    { workspaceId: 'ws-old', title: '旧工作区', order: 4, sessionCount: 2, movedAt: now },
+  ]])
+  const groups = groupRowsByWorkspace([
+    { sessionId: 's1', updatedAt: now, workspaceId: 'ws-old', workspaceTitle: '旧工作区', workspacePath: 'E:\\old' },
+  ], liveWorkspaces, tr, new Map(), archivedWorkspaces)
+  assert.equal(groups.length, 1)
+  assert.equal(groups[0].label, '旧工作区')
+  assert.equal(groups[0].order, 4)
+  assert.equal(groups[0].archivedWorkspace, true)
+
+  assert.doesNotThrow(() => ArchivedWorkspaceRow({
+    entry: { workspaceId: 'ws-old', title: '旧工作区', path: 'E:\\old', sessionCount: 2, totalSessions: 3, movedAt: now },
+    tr,
+    disabled: false,
+    onRestore: () => {},
+  }))
+  assert.doesNotThrow(() => WorkspaceMigratePanel({
+    summaries: [{
+      workspaceId: 'ws-live',
+      title: '演示',
+      path: 'E:\\demo',
+      total: 2,
+      live: 0,
+      marked: 0,
+      missing: 0,
+      order: 0,
+    }],
+    tr,
+    actionFor: () => ({ label: '迁移整个工作区', title: '迁移整个工作区', disabled: false, onClick: () => {} }),
+    defaultOpen: true,
+  }))
 
   const registered = []
   const slots = {

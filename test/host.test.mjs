@@ -32,7 +32,7 @@ async function call(handler, { method = 'POST', headers = {}, body = '{}' } = {}
   return { status: response.status, headers: response.headers, body: JSON.parse(Buffer.concat(chunks).toString('utf8')) }
 }
 
-test('host entry registers the four routes and fences the archive route', async () => {
+test('host entry registers the six routes and fences the archive route', async () => {
   const root = await mkdtemp(join(tmpdir(), 'dsh-session-migrator-host-'))
   const oldHome = process.env.DSH_HOME
   process.env.DSH_HOME = root
@@ -70,6 +70,8 @@ test('host entry registers the four routes and fences the archive route', async 
       '/session-migrator/migrate',
       '/session-migrator/restore',
       '/session-migrator/scan',
+      '/session-migrator/workspace-migrate',
+      '/session-migrator/workspace-restore',
     ])
     const denied = await call(routes.get('/session-migrator/archive'), { headers: {} })
     assert.equal(denied.status, 403)
